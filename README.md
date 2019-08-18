@@ -3,7 +3,7 @@ ppd42ns-driver is a java library that operates dust sensor called [PPD42NS](http
 I releases this in the form of the Eclipse plug-in project.
 You need Java 8 or higher.
 
-I use [Pi4J](http://wiki.seeedstudio.com/Grove-Dust_Sensor/)
+I use [Pi4J](https://pi4j.com/)
 for gpio communication in java and have confirmed that it works in Raspberry Pi 3B ([Raspbian Buster Lite OS](https://www.raspberrypi.org/downloads/raspbian/) (2019-07-10)).
 
 ## Connection of PPD42NS and Raspberry Pi 3B
