@@ -67,7 +67,7 @@ public class PPD42NSDriver {
 				diPin.setShutdownOptions(true);
 				ppd42nsListener = new PPD42NSGpioPinListenerDigital(this, queue);
 				diPin.addListener(ppd42nsListener);
-				LOG.info(logPrefix + "opened SPI SLCK.");
+				LOG.info(logPrefix + "opened");
 			}
 		} finally {
 			LOG.debug(logPrefix + "after - useCount:{}", useCount.get());
@@ -81,7 +81,7 @@ public class PPD42NSDriver {
 				diPin.removeAllListeners();
 				gpio.unprovisionPin(diPin);
 				gpio.shutdown();
-				LOG.info(logPrefix + "closed SPI SLCK.");
+				LOG.info(logPrefix + "closed");
 			}
 		} finally {
 			LOG.debug(logPrefix + "after - useCount:{}", useCount.get());
