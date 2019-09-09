@@ -30,7 +30,6 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 public class PPD42NSDriver {
 	private static final Logger LOG = LoggerFactory.getLogger(PPD42NSDriver.class);
 
-	private final Pin GPIO_IN = RaspiPin.GPIO_14;
 	private final int OBSERVE_TIMEOUT_MILLIS = 30000;
 	private final int GPIO_IN_TIMEOUT_MILLIS = 50000;
 
@@ -38,6 +37,8 @@ public class PPD42NSDriver {
 
 	private GpioPinDigitalInput diPin;
 	private String logPrefix;
+
+	private Pin gpioIn = RaspiPin.GPIO_10;
 
 	private final AtomicInteger useCount = new AtomicInteger(0);
 	private final BlockingQueue<PPD42NSObservationData> queue = new LinkedBlockingQueue<PPD42NSObservationData>();
@@ -63,7 +64,7 @@ public class PPD42NSDriver {
 		try {
 			LOG.debug(logPrefix + "before - useCount:{}", useCount.get());
 			if (useCount.compareAndSet(0, 1)) {
-				diPin = gpio.provisionDigitalInputPin(GPIO_IN, PinPullResistance.PULL_DOWN);
+				diPin = gpio.provisionDigitalInputPin(gpioIn, PinPullResistance.PULL_DOWN);
 				diPin.setShutdownOptions(true);
 				ppd42nsListener = new PPD42NSGpioPinListenerDigital(this, queue);
 				diPin.addListener(ppd42nsListener);
@@ -89,11 +90,21 @@ public class PPD42NSDriver {
 	}
 
 	public String getName() {
-		return GPIO_IN.getName().replaceAll("\\s", "_");
+		return gpioIn.getName().replaceAll("\\s", "_");
 	}
 
 	public String getLogPrefix() {
 		return logPrefix;
+	}
+
+	public void setGpio10() {
+		gpioIn = RaspiPin.GPIO_10;
+		logPrefix = "[" + getName() + "] ";
+	}
+
+	public void setGpio14() {
+		gpioIn = RaspiPin.GPIO_14;
+		logPrefix = "[" + getName() + "] ";
 	}
 
 	public PPD42NSObservationData read() {
@@ -112,6 +123,7 @@ public class PPD42NSDriver {
 	 ******************************************************************************************************************/
 	public static void main(String[] args) {
 		PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance();
+		ppd42ns.setGpio10();
 		ppd42ns.open();
 
 		while (true) {
