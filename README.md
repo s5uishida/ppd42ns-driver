@@ -14,8 +14,8 @@ for gpio communication in java and have confirmed that it works in Raspberry Pi 
   - GND (pin#1 - Black)
   - PM2.5 (pin#4 - Yellow)
 - [GPIO of Raspberry Pi 3B](https://www.raspberrypi.org/documentation/usage/gpio/README.md)
-  - Vin --> (4)
-  - GND --> (6)
+  - Vin --> (2) or (4)
+  - GND --> (6), (9), (14), (20), (25), (30), (34) or (39)
   - Tx --> (19) GPIO10 or (8) GPIO14
 
 ## Install Raspbian Buster Lite OS (2019-07-10)
