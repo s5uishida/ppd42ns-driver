@@ -16,7 +16,7 @@ for gpio communication in java and have confirmed that it works in Raspberry Pi 
 - [GPIO of Raspberry Pi 3B](https://www.raspberrypi.org/documentation/usage/gpio/README.md)
   - Vin --> (4)
   - GND --> (6)
-  - Tx --> (8) GPIO14
+  - Tx --> (19) GPIO10 or (8) GPIO14
 
 ## Install Raspbian Buster Lite OS (2019-07-10)
 The reason for using this version is that it is the latest as of July 2019 and [BlueZ](http://www.bluez.org/) 5.50 is included from the beginning, and use Bluetooth and serial communication simultaneously.
@@ -28,6 +28,15 @@ console=serial0,115200 --> removed
 ```
 - Edit `/boot/config.txt`
 ```
+@@ -45,7 +45,7 @@
+ # Uncomment some or all of these to enable the optional hardware interfaces
+ #dtparam=i2c_arm=on
+ #dtparam=i2s=on
+-#dtparam=spi=on
++dtparam=spi=on
+ 
+ # Uncomment this to enable the lirc-rpi module
+ #dtoverlay=lirc-rpi
 @@ -55,6 +55,10 @@
  # Enable audio (loads snd_bcm2835)
  dtparam=audio=on
@@ -83,6 +92,7 @@ public class MyPPD42NS {
     
     public static void main(String[] args) {
         PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance();
+        ppd42ns.setGpio10();
         ppd42ns.open();
     
         while (true) {
