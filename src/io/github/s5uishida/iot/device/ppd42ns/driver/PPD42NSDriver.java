@@ -1,7 +1,9 @@
 package io.github.s5uishida.iot.device.ppd42ns.driver;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,38 +35,51 @@ public class PPD42NSDriver {
 	private final int OBSERVE_TIMEOUT_MILLIS = 30000;
 	private final int GPIO_IN_TIMEOUT_MILLIS = 50000;
 
+	private final Pin gpioPin;
 	private final GpioController gpio;
+	private final String logPrefix;
 
 	private GpioPinDigitalInput diPin;
-	private String logPrefix;
 
-	private Pin gpioIn = RaspiPin.GPIO_10;
+	private static final ConcurrentHashMap<String, PPD42NSDriver> map = new ConcurrentHashMap<String, PPD42NSDriver>();
 
 	private final AtomicInteger useCount = new AtomicInteger(0);
 	private final BlockingQueue<PPD42NSObservationData> queue = new LinkedBlockingQueue<PPD42NSObservationData>();
 
-	private static PPD42NSDriver ppd42ns;
-
 	private PPD42NSGpioPinListenerDigital ppd42nsListener;
 
 	synchronized public static PPD42NSDriver getInstance() {
+		return getInstance(RaspiPin.GPIO_10);
+	}
+
+	synchronized public static PPD42NSDriver getInstance(Pin gpioPin) {
+		String key = getName(Objects.requireNonNull(gpioPin));
+		PPD42NSDriver ppd42ns = map.get(key);
 		if (ppd42ns == null) {
-			ppd42ns = new PPD42NSDriver();
+			ppd42ns = new PPD42NSDriver(gpioPin);
+			map.put(key, ppd42ns);
 		}
 		return ppd42ns;
 	}
 
-	private PPD42NSDriver() {
+	private PPD42NSDriver(Pin gpioPin) {
+		if (gpioPin.equals(RaspiPin.GPIO_10) || gpioPin.equals(RaspiPin.GPIO_14)) {
+			this.gpioPin = gpioPin;
+		} else {
+			throw new IllegalArgumentException("The set " + getName(gpioPin) + " is not " +
+															getName(RaspiPin.GPIO_10) + " or " +
+															getName(RaspiPin.GPIO_14) + ".");
+		}
+		logPrefix = "[" + getName() + "] ";
 		GpioFactory.setDefaultProvider(new RaspiGpioProvider(RaspiPinNumberingScheme.BROADCOM_PIN_NUMBERING));
 		gpio = GpioFactory.getInstance();
-		logPrefix = "[" + getName() + "] ";
 	}
 
 	synchronized public void open() {
 		try {
 			LOG.debug(logPrefix + "before - useCount:{}", useCount.get());
 			if (useCount.compareAndSet(0, 1)) {
-				diPin = gpio.provisionDigitalInputPin(gpioIn, PinPullResistance.PULL_DOWN);
+				diPin = gpio.provisionDigitalInputPin(gpioPin, PinPullResistance.PULL_DOWN);
 				diPin.setShutdownOptions(true);
 				ppd42nsListener = new PPD42NSGpioPinListenerDigital(this, queue);
 				diPin.addListener(ppd42nsListener);
@@ -89,22 +104,16 @@ public class PPD42NSDriver {
 		}
 	}
 
+	public static String getName(Pin gpioPin) {
+		return gpioPin.getName().replaceAll("\\s", "_");
+	}
+
 	public String getName() {
-		return gpioIn.getName().replaceAll("\\s", "_");
+		return gpioPin.getName().replaceAll("\\s", "_");
 	}
 
 	public String getLogPrefix() {
 		return logPrefix;
-	}
-
-	public void setGpio10() {
-		gpioIn = RaspiPin.GPIO_10;
-		logPrefix = "[" + getName() + "] ";
-	}
-
-	public void setGpio14() {
-		gpioIn = RaspiPin.GPIO_14;
-		logPrefix = "[" + getName() + "] ";
 	}
 
 	public PPD42NSObservationData read() {
@@ -122,8 +131,7 @@ public class PPD42NSDriver {
 	 * Sample main
 	 ******************************************************************************************************************/
 	public static void main(String[] args) {
-		PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance();
-		ppd42ns.setGpio10();
+		PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance(RaspiPin.GPIO_10);
 		ppd42ns.open();
 
 		while (true) {

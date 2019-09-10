@@ -84,6 +84,9 @@ I would like to thank the authors of these very useful codes, and all the contri
 The following sample code will be helpful.
 **In the following code, ppd42ns.read() takes about 30 seconds to measure.**
 ```
+import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.RaspiPin;
+
 import io.github.s5uishida.iot.device.ppd42ns.driver.PPD42NSDriver;
 import io.github.s5uishida.iot.device.ppd42ns.driver.PPD42NSObservationData;
 
@@ -91,8 +94,7 @@ public class MyPPD42NS {
     private static final Logger LOG = LoggerFactory.getLogger(MyPPD42NS.class);
     
     public static void main(String[] args) {
-        PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance();
-        ppd42ns.setGpio10();
+        PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance(RaspiPin.GPIO_10);
         ppd42ns.open();
     
         while (true) {
