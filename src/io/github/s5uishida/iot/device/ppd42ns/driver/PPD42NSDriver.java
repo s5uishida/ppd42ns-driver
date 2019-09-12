@@ -63,12 +63,13 @@ public class PPD42NSDriver {
 	}
 
 	private PPD42NSDriver(Pin gpioPin) {
-		if (gpioPin.equals(RaspiPin.GPIO_10) || gpioPin.equals(RaspiPin.GPIO_14)) {
+		if (gpioPin.equals(RaspiPin.GPIO_10) || gpioPin.equals(RaspiPin.GPIO_20) || gpioPin.equals(RaspiPin.GPIO_14)) {
 			this.gpioPin = gpioPin;
 		} else {
 			throw new IllegalArgumentException("The set " + getName(gpioPin) + " is not " +
-															getName(RaspiPin.GPIO_10) + " or " +
-															getName(RaspiPin.GPIO_14) + ".");
+					getName(RaspiPin.GPIO_10) + ", " +
+					getName(RaspiPin.GPIO_20) + " or " +
+					getName(RaspiPin.GPIO_14) + ".");
 		}
 		logPrefix = "[" + getName() + "] ";
 		GpioFactory.setDefaultProvider(new RaspiGpioProvider(RaspiPinNumberingScheme.BROADCOM_PIN_NUMBERING));

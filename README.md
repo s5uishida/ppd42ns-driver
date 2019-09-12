@@ -16,7 +16,7 @@ for gpio communication in java and have confirmed that it works in Raspberry Pi 
 - [GPIO of Raspberry Pi 3B](https://www.raspberrypi.org/documentation/usage/gpio/README.md)
   - Vin --> (2) or (4)
   - GND --> (6), (9), (14), (20), (25), (30), (34) or (39)
-  - Tx --> (19) GPIO10 or (8) GPIO14
+  - Tx --> (19) GPIO10, (38) GPIO20 or (8) GPIO14
 
 ## Install Raspbian Buster Lite OS (2019-07-10)
 The reason for using this version is that it is the latest as of July 2019 and [BlueZ](http://www.bluez.org/) 5.50 is included from the beginning, and use Bluetooth and serial communication simultaneously.
