@@ -97,7 +97,7 @@ public class PPD42NSDriver {
 			if (useCount.compareAndSet(1, 0)) {
 				diPin.removeAllListeners();
 				gpio.unprovisionPin(diPin);
-				gpio.shutdown();
+//				gpio.shutdown();
 				LOG.info(logPrefix + "closed");
 			}
 		} finally {
