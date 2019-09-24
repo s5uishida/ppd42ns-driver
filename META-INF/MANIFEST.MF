@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: java driver for ppd42ns - dust sensor module
 Bundle-SymbolicName: ppd42ns-driver
-Bundle-Version: 0.1.4
+Bundle-Version: 0.1.5
 Automatic-Module-Name: ppd42ns-driver
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: com.pi4j.io.gpio;version="1.2.0",
  com.pi4j.io.gpio.event;version="1.2.0",
  org.slf4j;version="[1.7.25,1.8.0)"
-Export-Package: io.github.s5uishida.iot.device.ppd42ns.driver;version="0.1.4"
+Export-Package: io.github.s5uishida.iot.device.ppd42ns.driver;version="0.1.5"
 Bundle-Vendor: Shigeru Ishida (s5uishida)
