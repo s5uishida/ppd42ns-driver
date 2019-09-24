@@ -37,6 +37,7 @@ public class PPD42NSDriver {
 
 	private final Pin gpioPin;
 	private final GpioController gpio;
+	private final IPPD42NSHandler ppd42nsHandler;
 	private final String logPrefix;
 
 	private GpioPinDigitalInput diPin;
@@ -49,20 +50,24 @@ public class PPD42NSDriver {
 	private PPD42NSGpioPinListenerDigital ppd42nsListener;
 
 	synchronized public static PPD42NSDriver getInstance() {
-		return getInstance(RaspiPin.GPIO_10);
+		return getInstance(RaspiPin.GPIO_10, null);
 	}
 
 	synchronized public static PPD42NSDriver getInstance(Pin gpioPin) {
+		return getInstance(gpioPin, null);
+	}
+
+	synchronized public static PPD42NSDriver getInstance(Pin gpioPin, IPPD42NSHandler ppd42nsHandler) {
 		String key = getName(Objects.requireNonNull(gpioPin));
 		PPD42NSDriver ppd42ns = map.get(key);
 		if (ppd42ns == null) {
-			ppd42ns = new PPD42NSDriver(gpioPin);
+			ppd42ns = new PPD42NSDriver(gpioPin, ppd42nsHandler);
 			map.put(key, ppd42ns);
 		}
 		return ppd42ns;
 	}
 
-	private PPD42NSDriver(Pin gpioPin) {
+	private PPD42NSDriver(Pin gpioPin, IPPD42NSHandler ppd42nsHandler) {
 		if (gpioPin.equals(RaspiPin.GPIO_10) || gpioPin.equals(RaspiPin.GPIO_20) || gpioPin.equals(RaspiPin.GPIO_14)) {
 			this.gpioPin = gpioPin;
 		} else {
@@ -74,6 +79,7 @@ public class PPD42NSDriver {
 		logPrefix = "[" + getName() + "] ";
 		GpioFactory.setDefaultProvider(new RaspiGpioProvider(RaspiPinNumberingScheme.BROADCOM_PIN_NUMBERING));
 		gpio = GpioFactory.getInstance();
+		this.ppd42nsHandler = ppd42nsHandler;
 	}
 
 	synchronized public void open() {
@@ -84,6 +90,9 @@ public class PPD42NSDriver {
 				diPin.setShutdownOptions(true);
 				ppd42nsListener = new PPD42NSGpioPinListenerDigital(this, queue);
 				diPin.addListener(ppd42nsListener);
+				if (ppd42nsHandler != null) {
+					start();
+				}
 				LOG.info(logPrefix + "opened");
 			}
 		} finally {
@@ -98,6 +107,7 @@ public class PPD42NSDriver {
 				diPin.removeAllListeners();
 				gpio.unprovisionPin(diPin);
 //				gpio.shutdown();
+				queue.clear();
 				LOG.info(logPrefix + "closed");
 			}
 		} finally {
@@ -117,9 +127,19 @@ public class PPD42NSDriver {
 		return logPrefix;
 	}
 
-	public PPD42NSObservationData read() {
+	private void start() {
 		queue.clear();
 		ppd42nsListener.start();
+	}
+
+	public PPD42NSObservationData read() {
+		if (ppd42nsHandler != null) {
+			LOG.warn("read() is currently not available.");
+			return null;
+		}
+
+		start();
+
 		try {
 			return queue.poll(GPIO_IN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
@@ -132,13 +152,26 @@ public class PPD42NSDriver {
 	 * Sample main
 	 ******************************************************************************************************************/
 	public static void main(String[] args) {
+		testRead();
+	}
+
+	public static void testRead() {
 		PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance(RaspiPin.GPIO_10);
 		ppd42ns.open();
 
 		while (true) {
 			PPD42NSObservationData data = ppd42ns.read();
-			LOG.info(data.toString());
+			LOG.info("[{}] {}", ppd42ns.getName(), data.toString());
 		}
+
+//		if (ppd42ns != null) {
+//			ppd42ns.close();
+//		}
+	}
+
+	public static void testHandler() {
+		PPD42NSDriver ppd42ns = PPD42NSDriver.getInstance(RaspiPin.GPIO_10, new MyPPD42NSHandler());
+		ppd42ns.open();
 
 //		if (ppd42ns != null) {
 //			ppd42ns.close();
@@ -203,10 +236,28 @@ public class PPD42NSDriver {
 				float pcs = (float)(1.1 * Math.pow(ratio, 3) - 3.8 * Math.pow(ratio, 2) + 520.0 * ratio + 0.62);
 				float ugm3 = pcs2ugm3(pcs);
 				PPD42NSObservationData data = new PPD42NSObservationData(startTime, currentTime, pcs, ugm3);
-				queue.offer(data);
-				LOG.trace(ppd42ns.getLogPrefix() + "offer - {}", data.toString());
-				reset();
+				if (ppd42ns.ppd42nsHandler != null) {
+					LOG.trace(ppd42ns.getLogPrefix() + "handle - {}", data.toString());
+					ppd42ns.ppd42nsHandler.handle(ppd42ns.getName(), data);
+					start();
+				} else {
+					LOG.trace(ppd42ns.getLogPrefix() + "offer - {}", data.toString());
+					queue.offer(data);
+					reset();
+				}
 			}
 		}
+	}
+}
+
+/******************************************************************************************************************
+ * Sample implementation of IPPD42NSHandler interface
+ ******************************************************************************************************************/
+class MyPPD42NSHandler implements IPPD42NSHandler {
+	private static final Logger LOG = LoggerFactory.getLogger(MyPPD42NSHandler.class);
+
+	@Override
+	public void handle(String pinName, PPD42NSObservationData data) {
+		LOG.info("[{}] {}", pinName, data.toString());
 	}
 }
