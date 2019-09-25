@@ -86,7 +86,7 @@ public class PPD42NSDriver {
 		try {
 			LOG.debug(logPrefix + "before - useCount:{}", useCount.get());
 			if (useCount.compareAndSet(0, 1)) {
-				diPin = gpio.provisionDigitalInputPin(gpioPin, PinPullResistance.PULL_DOWN);
+				diPin = gpio.provisionDigitalInputPin(gpioPin, PinPullResistance.PULL_UP);
 				diPin.setShutdownOptions(true);
 				ppd42nsListener = new PPD42NSGpioPinListenerDigital(this, queue);
 				diPin.addListener(ppd42nsListener);
