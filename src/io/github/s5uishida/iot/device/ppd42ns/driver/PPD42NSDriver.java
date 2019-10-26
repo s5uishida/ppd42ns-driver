@@ -1,11 +1,13 @@
 package io.github.s5uishida.iot.device.ppd42ns.driver;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -32,8 +34,7 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 public class PPD42NSDriver {
 	private static final Logger LOG = LoggerFactory.getLogger(PPD42NSDriver.class);
 
-	private final int OBSERVE_TIMEOUT_MILLIS = 30000;
-	private final int GPIO_IN_TIMEOUT_MILLIS = 50000;
+	private final int OBSERVATION_TIME_MILLIS = 30000;
 
 	private final Pin gpioPin;
 	private final GpioController gpio;
@@ -132,20 +133,26 @@ public class PPD42NSDriver {
 		ppd42nsListener.start();
 	}
 
-	public PPD42NSObservationData read() {
+	public PPD42NSObservationData read() throws IOException {
 		if (ppd42nsHandler != null) {
-			LOG.warn("read() is currently not available.");
-			return null;
+			throw new IOException("read() is currently not available.");
+		}
+
+		if (ppd42nsListener.isRunning()) {
+			throw new IOException("read() is already being called.");
 		}
 
 		start();
 
 		try {
-			return queue.poll(GPIO_IN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+			return queue.take();
 		} catch (InterruptedException e) {
-			LOG.warn("caught - {}", e.toString());
-			return null;
+			throw new IOException(e);
 		}
+	}
+
+	public boolean isReading() {
+		return ppd42nsListener.isRunning();
 	}
 
 	/******************************************************************************************************************
@@ -160,8 +167,12 @@ public class PPD42NSDriver {
 		ppd42ns.open();
 
 		while (true) {
-			PPD42NSObservationData data = ppd42ns.read();
-			LOG.info("[{}] {}", ppd42ns.getName(), data.toString());
+			try {
+				PPD42NSObservationData data = ppd42ns.read();
+				LOG.info("[{}] {}", ppd42ns.getName(), data.toString());
+			} catch (IOException e) {
+				LOG.warn("caught - {}", e.toString());
+			}
 		}
 
 //		if (ppd42ns != null) {
@@ -180,6 +191,8 @@ public class PPD42NSDriver {
 
 	class PPD42NSGpioPinListenerDigital implements GpioPinListenerDigital {
 		private final Logger LOG = LoggerFactory.getLogger(PPD42NSGpioPinListenerDigital.class);
+
+		private final Timer timer = new Timer();
 
 		private final PPD42NSDriver ppd42ns;
 		private final BlockingQueue<PPD42NSObservationData> queue;
@@ -202,6 +215,12 @@ public class PPD42NSDriver {
 		public void start() {
 			reset();
 			startTime = new Date();
+
+			timer.schedule(new CalculationTask(), OBSERVATION_TIME_MILLIS);
+		}
+
+		public boolean isRunning() {
+			return (startTime == null) ? false : true;
 		}
 
 		private float pcs2ugm3(float pcs) {
@@ -230,12 +249,19 @@ public class PPD42NSDriver {
 			} else {
 				return;
 			}
+		}
 
-			if ((currentTime.getTime() - startTime.getTime()) >= OBSERVE_TIMEOUT_MILLIS) {
+		class CalculationTask extends TimerTask {
+			@Override
+			public void run() {
+				Date currentTime = new Date();
+
 				float ratio = 100f * ((float)totalLowTimeMillis) / ((float)(currentTime.getTime() - startTime.getTime()));
 				float pcs = (float)(1.1 * Math.pow(ratio, 3) - 3.8 * Math.pow(ratio, 2) + 520.0 * ratio + 0.62);
 				float ugm3 = pcs2ugm3(pcs);
+
 				PPD42NSObservationData data = new PPD42NSObservationData(startTime, currentTime, pcs, ugm3);
+
 				if (ppd42ns.ppd42nsHandler != null) {
 					LOG.trace(ppd42ns.getLogPrefix() + "handle - {}", data.toString());
 					ppd42ns.ppd42nsHandler.handle(ppd42ns.getName(), data);
