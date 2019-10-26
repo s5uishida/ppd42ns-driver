@@ -98,8 +98,12 @@ public class MyPPD42NS {
         ppd42ns.open();
     
         while (true) {
-            PPD42NSObservationData data = ppd42ns.read();
-            LOG.info(data.toString());
+            try {
+                PPD42NSObservationData data = ppd42ns.read();
+                LOG.info("[{}] {}", ppd42ns.getName(), data.toString());
+            } catch (IOException e) {
+                LOG.warn("caught - {}", e.toString());
+            }
         }
     
 //      if (ppd42ns != null) {
