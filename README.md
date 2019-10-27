@@ -58,6 +58,18 @@ The Pi4J native library is dynamically linked to WiringPi.
 # apt-get update
 # apt-get install wiringpi
 ```
+When using with Raspberry Pi 4B, install the latest version as follows.
+Please refer to [here](http://wiringpi.com/wiringpi-updated-to-2-52-for-the-raspberry-pi-4b/).
+```
+# wget https://project-downloads.drogon.net/wiringpi-latest.deb
+# dpkg -i wiringpi-latest.deb
+```
+Please make sure it’s version 2.52.
+```
+# gpio -v
+gpio version: 2.52
+```
+**Note. In October 2019, I have not confirmed the official information that can use Raspberry Pi 4B with Pi4J and WiringPi. Therefore, some problems may occur.**
 
 ## Install jdk11 on Raspberry Pi 3B
 For example, [jdk11 apt-install](https://apt.bell-sw.com/) at [BELLSOFT](https://bell-sw.com/) is shown below.
