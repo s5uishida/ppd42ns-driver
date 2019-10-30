@@ -96,7 +96,7 @@ I would like to thank the authors of these very useful codes, and all the contri
 ## How to use
 The following sample code will be helpful.
 **In the following code, ppd42ns.read() takes about 30 seconds to measure.**
-```
+```java
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.RaspiPin;
 
