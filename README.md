@@ -89,7 +89,7 @@ If git is not included, please install it.
 
 ## Use this with the following bundles
 - [SLF4J 1.7.26](https://www.slf4j.org/)
-- [Pi4J 1.2 (pi4j-core.jar)](https://pi4j.com/download/pi4j-1.2.zip)
+- [Pi4J 1.2 (pi4j-core.jar)](https://github.com/s5uishida/pi4j-core-osgi)
 
 I would like to thank the authors of these very useful codes, and all the contributors.
 
