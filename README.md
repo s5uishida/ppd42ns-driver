@@ -72,13 +72,11 @@ gpio version: 2.52
 **Note. In October 2019, I have not confirmed the official information that can use Raspberry Pi 4B with Pi4J and WiringPi.
 I've simply checked that it works, but some problems may occur.**
 
-## Install jdk11 on Raspberry Pi 3B
-For example, [jdk11 apt-install](https://apt.bell-sw.com/) at [BELLSOFT](https://bell-sw.com/) is shown below.
+## Install jdk8 on Raspberry Pi 3B
+For example, the installation of OpenJDK 8 is shown below.
 ```
-# wget -q -O - https://download.bell-sw.com/pki/GPG-KEY-bellsoft | apt-key add -
-# echo "deb [arch=armhf] https://apt.bell-sw.com/ stable main" | tee /etc/apt/sources.list.d/bellsoft.list
 # apt-get update
-# apt-get install bellsoft-java11
+# apt-get install openjdk-8-jdk
 ```
 
 ## Install git
